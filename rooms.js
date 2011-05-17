@@ -1,6 +1,4 @@
-var utils = require('./utils'),
-	url = require('url'),
-	qs = require('querystring');
+var utils = require('./utils');
 
 var MESSAGE_BACKLOG = 1000,
 	SESSION_TIMEOUT = 1 * 60 * 1000, // 2 minute
@@ -202,8 +200,7 @@ this.views.show = function(req, res) {
 
 this.views.join = function(req, res) {
 	res.contentType('json');
-	
-	var session = req.room.join(qs.parse(url.parse(req.url).query).nickname);
+	var session = req.room.join(req.param('nickname'));
 	if (session.error) {
 		res.send(session.error, session.status);
 		return;
@@ -213,7 +210,7 @@ this.views.join = function(req, res) {
 };
 
 this.views.leave = function(req, res) {
-	var sessionId = qs.parse(url.parse(req.url).query).sessionId;
+	var sessionId = req.param('sessionId');
 	var response = req.room.leave(sessionId);
 	if (response) {
 		res.contentType('json');
@@ -226,8 +223,8 @@ this.views.leave = function(req, res) {
 
 this.views.send = function(req, res) {
 	res.contentType('json');
-	var sessionId = qs.parse(url.parse(req.url).query).sessionId;
-	var text = qs.parse(url.parse(req.url).query).text;
+	var sessionId = req.param('sessionId');
+	var text = req.param('text');
 	var session = req.room.sessions[sessionId];
 	session.poke();
 	if (!session || !text) {
@@ -240,18 +237,19 @@ this.views.send = function(req, res) {
 
 this.views.receive = function(req, res) {
 	res.contentType('json');
-	if (!qs.parse(url.parse(req.url).query).since) {
+	var since = req.param('since');
+	if (!since) {
 		res.send('Must supply since parameter', 400);
 		return;
 	}
-	var id = qs.parse(url.parse(req.url).query).id;
+	var sessionId = req.param('sessionId');
 	var session;
-	if (id && req.room.sessions[id]) {
-		session = req.room.sessions[id];
+	if (sessionId && req.room.sessions[sessionId]) {
+		session = req.room.sessions[sessionId];
 		session.poke();
 	}
 	
-	var since = parseInt(qs.parse(url.parse(req.url).query).since, 10);
+	since = parseInt(since, 10);
 	
 	req.room.getMessages(since, function(messages) {
 		if (session) session.poke();

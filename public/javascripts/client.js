@@ -134,8 +134,7 @@ var hasLeft = false;
 
 function leave() {
 	if (!hasLeft) {
-		// Change this to a POST method
-		$.get('/' + CONFIG.roomId + '/leave', {
+		$.post('/' + CONFIG.roomId + '/leave', {
 			sessionId: CONFIG.sessionId
 		}, function (data) {
 			hasLeft = true;
@@ -155,6 +154,7 @@ function onConnect(session) {
 function join(nickname) {
 	
 	$.ajax({
+		type: 'post',
 		cached: false,
 		url: '/' + CONFIG.roomId + '/join',
 		data: {
@@ -171,8 +171,7 @@ function join(nickname) {
 }
 
 function send(message) {
-	// This should be POST
-	$.get('/' + CONFIG.roomId + '/send', {
+	$.post('/' + CONFIG.roomId + '/send', {
 		sessionId: CONFIG.sessionId,
 		text: message
 	}, function(data) {}, 'json');
@@ -214,7 +213,7 @@ function receive(data) {
 		dataType: 'json',
 		data: {
 			since: CONFIG.lastMessageTime,
-			id: CONFIG.id
+			sessionId: CONFIG.sessionId
 		},
 		error: function() {
 			addMessage('error', new Date(), 'error', 'long poll error. trying again...');
