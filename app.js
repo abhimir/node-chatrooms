@@ -4,9 +4,11 @@
  */
 
 var express = require('express'),
+	io = require('socket.io'),
 	rooms = require('./rooms');
 
-var app = module.exports = express.createServer();
+var app = module.exports = express.createServer(),
+	io = io.listen(app);
 
 // Configuration
 

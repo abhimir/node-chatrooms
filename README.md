@@ -1,9 +1,7 @@
 node-chatrooms
 ==============
 
-Just a technical exercise for me. I built a custom chat room based on the
-node.js example and added the ability to have multiple rooms. Built using Express,
-Jade, and Stylus.
+Same as master branch but using Socket.IO instead of vanilla long-polling.
 
 TODO
 ----
