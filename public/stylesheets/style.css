@@ -1,0 +1,115 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+body {
+  background: #22252a;
+  color: #eee;
+  font-family: DejaVu Sans Mono, fixed;
+  font-size: 10px;
+  line-height: 30px;
+}
+a {
+  color: #fff;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+#list {
+  margin: 150px 0 0 100px;
+}
+#list li,
+#list p {
+  font-size: 180%;
+}
+#connect,
+#loading {
+  left: 0;
+  height: 100%;
+  position: fixed;
+  width: 100%;
+}
+#connect p,
+#loading p {
+  font-size: 180%;
+  margin: 150px 0 10px 100px;
+}
+#connect {
+  z-index: 10001;
+}
+#connect form {
+  margin: 0 0 0 100px;
+}
+#connect form input {
+  margin: 0 10px 0 0;
+  padding: 5px;
+  width: 200px;
+}
+#connect form button {
+  padding: 5px;
+}
+#loading {
+  z-index: 10000;
+}
+#message-template {
+  display: none;
+}
+#messages {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 90px 0;
+}
+#messages li {
+  color: #555;
+  font-size: 160%;
+}
+#messages li span {
+  padding: 0 5px;
+}
+#messages li .nickname {
+  font-weight: 700;
+}
+#messages li.msg .nickname,
+#messages li.msg .text {
+  color: #fff;
+}
+#messages li.notice .nickname,
+#messages li.personal .nickname {
+  color: #cd5;
+}
+#toolbar {
+  background: #733;
+  bottom: 49px;
+  color: #fff;
+  left: 0;
+  position: fixed;
+  width: 100%;
+}
+#toolbar li {
+  display: inline;
+  font-size: 140%;
+  padding: 0 20px 0 0;
+}
+#talk {
+  bottom: 0;
+  left: 0;
+  position: fixed;
+  width: 100%;
+}
+#talk input {
+  background: #22252a;
+  border: 0;
+  color: #fff;
+  display: block;
+  font-size: 160%;
+  line-height: 20px;
+  margin: 0;
+  padding: 20px;
+  width: 100%;
+}
+#talk button {
+  display: none;
+}

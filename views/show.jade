@@ -1,0 +1,30 @@
+#connect
+	p Please enter a nickname to join the chatroom.
+	form#join(action='/' + room.id + '/join')
+		input#nickname(type='text')
+		button(type='submit') join
+#loading
+	p Connecting. Please wait&hellip;
+#chat
+	ol#messages(rev=room.id)
+		li#message-template
+			span.timestamp ?
+			span.nickname ?
+			span.text ?
+		- for (var i in room.messages)
+			- var message = room.messages[i]
+			li(class=message.type)
+				span.timestamp= message.timestamp
+				span.nickname= message.nickname
+				span.text= message.text
+	ul#toolbar
+		li#users: a(href='/' + room.id + '/who')
+			span= room.sessions.length || 0
+			|  users
+		li#uptime= room.created
+		li#back: a(href='/') See the list of rooms
+		li#create: a(href='/create') Create a new room
+	form#talk(action='/' + room.id + '/send')
+		input#entry(type='text')
+		button(type='submit') Send
+script(type='text/javascript', src='/javascripts/client.js')

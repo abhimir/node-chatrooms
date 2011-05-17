@@ -1,0 +1,96 @@
+html, body
+	height 100%
+	margin 0
+	padding 0
+	
+body
+	background #22252a
+	color #eee
+	font-family DejaVu Sans Mono, fixed
+	font-size 10px
+	line-height 30px
+	
+a
+	color white
+	text-decoration none
+	&:hover
+		text-decoration underline
+		
+#list
+	margin 150px 0 0 100px
+	li, p
+		font-size 180%
+		
+#connect, #loading
+	left 0
+	height 100%
+	position fixed
+	width 100%
+	p
+		font-size 180%
+		margin 150px 0 10px 100px
+	
+#connect
+	z-index 10001
+	form
+		margin 0 0 0 100px
+		input
+			margin 0 10px 0 0
+			padding 5px
+			width 200px
+		button
+			padding 5px
+	
+#loading
+	z-index 10000
+			
+#message-template
+	display none
+	
+#messages
+	list-style none
+	margin 0
+	padding 0 0 90px 0
+	li
+		color #555
+		font-size 160%
+		span
+			padding 0 5px
+		.nickname
+			font-weight 700
+		&.msg
+			.nickname, .text
+				color #fff
+		&.notice, &.personal
+			.nickname
+				color #CCDD55
+	
+		
+#toolbar
+	background #773333
+	bottom 49px
+	color #fff
+	left 0
+	position fixed
+	width 100%
+	li
+		display inline
+		font-size 140%
+		padding 0 20px 0 0
+#talk
+	bottom 0
+	left 0
+	position fixed
+	width 100%
+	input
+		background #22252a
+		border 0
+		color white
+		display block
+		font-size 160%
+		line-height 20px
+		margin 0
+		padding 20px
+		width 100%
+	button
+		display none

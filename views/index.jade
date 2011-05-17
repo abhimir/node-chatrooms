@@ -1,0 +1,10 @@
+#list
+	h1= title
+	ul
+		- for (var id in rooms)
+			- var room = rooms[id]
+			li
+				a(href=id)
+					= id
+					|  (#{Object.keys(room.sessions).length || 0} users)
+	p: a(href='/create') Create a new room
