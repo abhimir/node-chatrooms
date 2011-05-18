@@ -10,7 +10,6 @@ var CONFIG = {
 var $messageTemplate = $('#message-template').clone().removeAttr('id').remove(),
 	title = document.title,
 	nicknames = [],
-	transmissionErrors = 0,
 	startTime;
 	
 function dateToRelativeTime(date, nowThreshold) {
@@ -87,25 +86,31 @@ function scrollDown() {
 	$('#entry').focus();
 }
 
-function addMessage(type, timestamp, nickname, text) {
+function addMessage(message) {
 	
-	if (text === null) return;
+	if (message.text === null) return;
 	
 	var $message = $messageTemplate.clone();
 	
-	text = util.escape(text);
+	text = util.escape(message.text);
 	
 	var nicknameRe = new RegExp(CONFIG.nickname);
-	if (nicknameRe.exec(text)) {
+	if (nicknameRe.exec(message.text)) {
 		$message.addClass('personal');
 	}
 	
-	text = text.replace(util.urlRE, '<a target="_blank" href="$&">$&</a>');
+	message.text = message.text.replace(util.urlRE, '<a target="_blank" href="$&">$&</a>');
 	
-	$message.addClass(type)
-		.find('.timestamp').html(util.timeString(timestamp)).end()
-		.find('.nickname').html(util.escape(nickname)).end()
-		.find('.text').html(text);
+	if (message.type == 'msg' && !hasFocus()) {
+		CONFIG.unread++;
+	} else if (message.type == 'joined' || message.type == 'left') {
+		$('span', '#users').text(message.who.length);
+	}
+	console.log(message);
+	$message.addClass(message.type)
+		.find('.timestamp').html(util.timeString(new Date())).end()
+		.find('.nickname').html(util.escape(message.nickname)).end()
+		.find('.text').html(message.text);
 	
 	$('#messages').append($message);
 	scrollDown();
@@ -130,25 +135,60 @@ function updateUptime() {
 	}
 }
 
-var hasLeft = false;
-
-function leave() {
-	if (!hasLeft) {
-		$.post('/' + CONFIG.roomId + '/leave', {
-			sessionId: CONFIG.sessionId
-		}, function (data) {
-			hasLeft = true;
-		}, 'json');
-	}
-}
-
 function onConnect(session) {
 	CONFIG.nickname = session.nickname
-	CONFIG.sessionId = session.id
 	
-	showChat(CONFIG.nick);
+	showChat();
 	
-	$(window).bind('beforeunload unload', leave);
+	var socket = new io.Socket(null, {port: 3000});
+	socket.connect();
+	socket.on('message', function(message) {
+		switch (message.type) {
+			case 'init':
+				CONFIG.sessionId = message.sessionId;
+				socket.send({
+					type: 'joined',
+					nickname: CONFIG.nickname,
+					roomId: CONFIG.roomId,
+					sessionId: CONFIG.sessionId
+				});
+				break;
+			case 'msg':
+			case 'joined':
+			case 'left':
+				addMessage(message);
+				break;
+		}
+	});
+
+	$('#talk').submit(function(e) {
+		e.preventDefault();
+		var $entry = $('#entry');
+		var message = $entry.val();
+		$entry.val('');
+		
+		if (message.length > 0) {
+			socket.send({
+				type: 'msg',
+				text: message,
+				sessionId: CONFIG.sessionId,
+				roomId: CONFIG.roomId,
+				nickname: CONFIG.nickname
+			});
+		}
+	});
+	
+	var hasLeft = false;
+	$(window).bind('beforeunload unload', function() {
+		if (!hasLeft) {
+			socket.send({
+				type: 'left',
+				nickname: CONFIG.nickname,
+				roomId: CONFIG.roomId,
+				sessionId: CONFIG.sessionId
+			});
+		}
+	});
 }
 
 function join(nickname) {
@@ -170,69 +210,8 @@ function join(nickname) {
 	
 }
 
-function send(message) {
-	$.post('/' + CONFIG.roomId + '/send', {
-		sessionId: CONFIG.sessionId,
-		text: message
-	}, function(data) {}, 'json');
-	
-}
-
 function hasFocus() {
 	return $('#entry').is(':focus');
-}
-
-function receive(data) {
-	if (transmissionErrors > 2) {
-		showConnect();
-		return;
-	}
-	
-	if (data && data.messages) {
-		for (var i in data.messages) {
-			var message = data.messages[i];
-			if (message.timestamp > CONFIG.lastMessageTime) {
-				CONFIG.lastMessageTime = message.timestamp;
-			}
-			
-			if (message.type == 'msg' && !hasFocus()) {
-				CONFIG.unread++;
-			} else if (message.type == 'joined' || message.type == 'left') {
-				who();
-			}
-			addMessage(message.type, new Date(message.timestamp), message.nickname, message.text);
-		}
-		if (CONFIG.unread) {
-			updateTitle();
-		}
-	}
-	
-	$.ajax({
-		cache: false,
-		url: '/' + CONFIG.roomId + '/receive',
-		dataType: 'json',
-		data: {
-			since: CONFIG.lastMessageTime,
-			sessionId: CONFIG.sessionId
-		},
-		error: function() {
-			addMessage('error', new Date(), 'error', 'long poll error. trying again...');
-			transmissionErrors += 1;
-			setTimeout(receive, 10 * 1000);
-		},
-		success: function(data) {
-			transmissionErrors = 0;
-			receive(data);
-		}
-	});
-}
-
-function who() {
-	$.get('/' + CONFIG.roomId + '/who', {}, function(data, status) {
-		if (status != 'success') return;
-		nicknames = data.nicknames;
-		$('span', '#users').text(nicknames.length);
-	}, 'json');
 }
 
 function showConnect() {
@@ -273,7 +252,6 @@ $(function() {
 	startTime = new Date($('#uptime').text());
 	
 	updateUptime();
-	receive();
 	showConnect();
 	
 	setInterval(function() {
@@ -281,18 +259,6 @@ $(function() {
 	}, 25 * 1000);
 	
 	$('#entry').mousedown(clearUnread);
-
-	$('#talk').submit(function(e) {
-		e.preventDefault();
-		var $entry = $('#entry');
-		var message = $entry.val();
-		$entry.val('');
-		
-		if (message.length > 0) {
-			send(message);
-		}
-	});
-	
 	$('#join').submit(function(e) {
 		e.preventDefault();
 		showLoading();
@@ -309,9 +275,5 @@ $(function() {
 		}
 		addMessage('notice', new Date(), 'users:', nicknamesString);
 	});
-	
-	if (CONFIG.debug) {
-		showChat();
-	}
 	
 });
