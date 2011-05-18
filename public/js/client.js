@@ -140,7 +140,7 @@ function onConnect(session) {
 	
 	showChat();
 	
-	var socket = new io.Socket(null, {port: 3000});
+	var socket = new io.Socket(null, {port: 80});
 	socket.connect();
 	socket.on('message', function(message) {
 		switch (message.type) {
