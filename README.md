@@ -13,4 +13,5 @@ TODO
 * Check compatibility with different browsers
 * Add comments
 * Add tests
-* Look into Socket.IO integration
+* Room roles (Owner, moderator, user)
+* Organize code, maybe use Backbone.js

@@ -1,3 +1,9 @@
+0.0.5, 2011/05/17
+-----------------
+
+* Changed code from long-polling to leverage Socket.IO
+* Refactored a lot of code
+
 0.0.2, 2011/05/17
 -----------------
 
