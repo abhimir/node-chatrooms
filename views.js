@@ -14,32 +14,56 @@ function generateId(length) {
 }
 
 this.getRoomOr404 = function(req, res, next) {
-	var room = rooms[req.params.id];
-	if (room) {
-		req.room = room;
-		next();
-	} else {
-		next(new Error('Room not found with an ID of ' + req.params.id));
-	}
+	Room.findById(req.param('id'), function(error, room) {
+		if (room) {
+			req.room = room;
+			next();
+		} else {
+			next(new Error('Room not found with an ID of ' + req.params.id));
+		}
+	});
 };
 
-var rooms = {};
+var roomSessions = {};
+
+var nicknames = function(roomId) {
+	var nicknames = [];
+	for (var id in roomSessions[roomId]) {
+		nicknames.push(roomSessions[roomId][id].nickname);
+	}
+	return nicknames;
+}
+	
+var who = function(roomId) {
+	var sessionIds = [];
+	for (var id in roomSessions[roomId]) {
+		sessionIds.push(id);
+	}
+	return sessionIds;
+}
+
+Room.find({}, function(err, rooms) {
+	for (var i=0; i < rooms.length; i++) {
+		var room = rooms[i];
+		roomSessions[room.id] = {}
+	}
+});
 
 this.rooms = {
 	index: function(req, res) {
-		console.log('Showing ' + Object.keys(rooms).length + ' rooms');
-		res.render('index', {
-			rooms: rooms,
-			title: 'node chat'
+		Room.find({}, function(err, rooms) {
+			console.log('Showing ' + Object.keys(rooms).length + ' rooms');
+			res.render('index', {
+				rooms: rooms,
+				title: 'node chat'
+			});
 		});
 	},
 	create: function(req, res) {
-		var id = generateId();
-		while(id in rooms) {
-			id = generateId();
-		}
-		rooms[id] = new Room(id);
-		res.redirect('/' + id);
+		var room = new Room();
+		room.save();
+		roomSessions[room.id] = {}
+		res.redirect('/' + room.id);
 	},
 	show: function(req, res) {
 		console.log('Showing room ' + req.room.id);
@@ -58,8 +82,8 @@ this.rooms = {
 		} else if (/[^\w-]/.test(nickname)) {
 			error = 'Bad character found in nickname. Only letters, numbers, "-", and "_" are allowed';
 		} else {
-			for (var sessionId in req.room.sessions) {
-				var session = req.room.sessions[sessionId];
+			for (var sessionId in roomSessions[req.room.id]) {
+				var session = roomSessions[req.room.id];
 				if (session.nickname === nickname) {
 					error = 'Nickname already exists. Pick another one.';
 				}
@@ -75,33 +99,43 @@ this.rooms = {
 
 socket.on('connection', function(client) {
 
-	console.log(client.sessionId);
 	client.send({ type: 'init', sessionId: client.sessionId });
 	
 	client.on('message', function(message) {
-		var room = rooms[message.roomId];
-		var session = room.sessions[message.sessionId];
-		var msg = { type: message.type }
-		if (message.type === 'joined' && !session) {
-			if (!session) {
-				session = room.sessions[message.sessionId] = {
-					nickname: message.nickname
+		Room.findById(message.roomId, function(error, room) {
+			var session = roomSessions[room.id][message.sessionId];
+			var msg = { type: message.type }
+			if (message.type === 'joined' && !session) {
+				if (!session) {
+					session = roomSessions[room.id][message.sessionId] = {
+						nickname: message.nickname,
+						client: client
+					}
 				}
+				msg.who = nicknames(room.id);
+				msg.text = 'joined';
+				msg.nickname = session.nickname;
+			} else if (message.type === 'left') {
+				msg.nickname = session.nickname;
+				msg.who = nicknames(room.id);
+				msg.text = 'left';
+				delete roomSessions[room.id][message.sessionId];
+			} else {
+				msg.nickname = session.nickname;
+				msg.text = message.text;
 			}
-			msg.who = room.nicknames();
-			msg.text = 'joined';
-			msg.nickname = session.nickname;
-		} else if (message.type === 'left') {
-			msg.nickname = session.nickname;
-			msg.who = room.nicknames();
-			msg.text = 'left';
-			delete room.sessions[message.sessionId];
-		} else {
-			msg.nickname = session.nickname;
-			msg.text = message.text;
-		}
-		room.addMessage(msg);
-		socket.broadcast(msg);
+			room.messages.push({
+				type: msg.type,
+				text: msg.text,
+				nickname: msg.nickname,
+				timestamp: Date.now()
+			});
+			room.save();
+			for (var sessionId in roomSessions[room.id]) {
+				roomSessions[room.id][sessionId].client.send(msg);
+			}
+		});
+		//socket.broadcast(msg);
 	});
 	
 });

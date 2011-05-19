@@ -11,15 +11,15 @@
 			span.timestamp ?
 			span.nickname ?
 			span.text ?
-		- for (var i in room.messages)
-			- var message = room.messages[i]
+		- room.messages.forEach(function(message) {
 			li(class=message.type)
 				span.timestamp= message.timestamp
 				span.nickname= message.nickname
 				span.text= message.text
+		- })
 	ul#toolbar
 		li#users: a(href='/' + room.id + '/who')
-			span= room.sessions.length || 0
+			span ?
 			|  users
 		li#uptime= room.created
 		li#back: a(href='/') See the list of rooms

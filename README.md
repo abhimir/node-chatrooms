@@ -1,17 +1,21 @@
 node-chatrooms
 ==============
 
-Same as master branch but using Socket.IO instead of vanilla long-polling.
+Like the example Node.js chat application except it supports multiple rooms and
+uses Socket.IO instead of long-polling. This is just a technical excercise.
 
 TODO
 ----
 
 * Name rooms
-* Add passwords to rooms when creating
-* Get it working with MongoDB using Mongoose
-* Actual authentication
+* Option to add a password to rooms when creating
+* Actual authentication/logins
 * Check compatibility with different browsers
-* Add comments
+* Add comments to code
 * Add tests
 * Room roles (Owner, moderator, user)
-* Organize code, maybe use Backbone.js
+* Organize client code with Backbone.js
+* Fix the error messages when picking a nickname
+* Handle sessions better
+* Fix socket.io problems with Chrome
+* Update socket.io to development version

@@ -1,4 +1,5 @@
 var express = require('express'),
+	mongoose = require('mongoose'),
 	path = require('path');
 
 var app = express.createServer();
@@ -6,7 +7,6 @@ var app = express.createServer();
 app.configure(function() {
 	app.set('views', path.join(__dirname, 'templates'));
 	app.set('view engine', 'jade');
-	app.set('db path', 'mongodb://localhost/node-chatrooms');
 	app.use(express.bodyParser());
 	app.use(express.methodOverride());
 	app.use(require('stylus').middleware({ src: path.join(__dirname, 'public') }));
@@ -38,12 +38,11 @@ for (var name in urls) {
 		url.view.unshift(url.path);
 		var args = url.view;
 	}
-	console.log(args);
 	app[url.method].apply(app, args);
 }
-
+mongoose.connect('mongodb://localhost/test');
 
 if (!module.parent) {
-	app.listen(80);
+	app.listen(3000);
 	console.log("Express server listening on port %d", app.address().port);
 }
